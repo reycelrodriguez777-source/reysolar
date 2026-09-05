@@ -958,5 +958,14 @@ if ("serviceWorker" in navigator) {
   });
 }
   </script>
+  <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("REYSOLAR PWA: Service Worker activo"))
+      .catch(error => console.error("REYSOLAR PWA:", error));
+  });
+}
+  </script>
 </body>
 </html>
