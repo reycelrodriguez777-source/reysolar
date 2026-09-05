@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REYSOLAR · Dimensionamiento e instalación fotovoltaica</title>
+<style>
+  :root{
+    --bg:#0c1118; --panel:#141c27; --panel-2:#1a2432; --line:#25313f;
+    --sun:#ffb238; --sun-dim:#8a6220; --teal:#3fb8a3; --red:#e5654a; --blue:#5aa6ff;
+    --text:#e9edf2; --muted:#8fa0b3; --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',-apple-system,sans-serif; line-height:1.45;}
+  h1,h2,h3{font-family:'Space Grotesk','IBM Plex Sans',sans-serif; margin:0 0 4px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px 14px 60px;}
+  header{padding:14px 0 20px; border-bottom:1px solid var(--line); margin-bottom:18px; display:flex; gap:12px; align-items:center;}
+  header .htxt h1{font-size:1.5rem; letter-spacing:-0.01em;}
+  header p{color:var(--muted); margin:2px 0 0; font-size:0.88rem;}
+  .badge-row{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+  .badge{font-size:0.7rem; color:var(--sun); border:1px solid var(--sun-dim); padding:2px 8px; border-radius:20px;}
+
+  .tabs{display:flex; gap:4px; overflow-x:auto; margin-bottom:16px; border-bottom:1px solid var(--line);}
+  .tab{flex:none; padding:9px 11px; font-size:0.8rem; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+  .tab.active{color:var(--sun); border-bottom-color:var(--sun);}
+
+  .panel{display:none; animation:fadein .25s ease;}
+  .panel.active{display:block;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; transition:border-color .2s;}
+  .card h3{font-size:0.95rem; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .card h3 .n{color:var(--sun); font-family:var(--mono); font-size:0.8rem;}
+  .card h3 svg{flex:none;}
+
+  label{display:block; font-size:0.76rem; color:var(--muted); margin-bottom:4px; margin-top:10px;}
+  label:first-child{margin-top:0;}
+  input, select{width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-size:0.93rem; font-family:var(--mono);}
+  input[type=checkbox]{width:auto;}
+  input:focus, select:focus{outline:none; border-color:var(--sun);}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+
+  .readout{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
+  .readout .val{font-family:var(--mono); font-size:1.3rem; color:var(--sun); font-weight:600;}
+  .readout .val small{font-size:0.6em; color:var(--muted); font-weight:400;}
+  .readout .lbl{font-size:0.7rem; color:var(--muted); margin-top:2px;}
+  .readout.ok .val{color:var(--teal);} .readout.warn .val{color:var(--red);}
+  .grid-readout{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;}
+  .grid-readout.g3{grid-template-columns:1fr 1fr 1fr;}
+
+  .flag{display:flex; gap:8px; align-items:flex-start; font-size:0.8rem; padding:9px 10px; border-radius:7px; margin-top:8px;}
+  .flag.ok{background:rgba(63,184,163,0.1); color:var(--teal); border:1px solid rgba(63,184,163,0.3);}
+  .flag.warn{background:rgba(229,101,74,0.1); color:var(--red); border:1px solid rgba(229,101,74,0.3);}
+  .flag b{display:block; margin-bottom:2px;}
+  .flag .fix{color:var(--text); opacity:0.85; font-size:0.78rem; margin-top:3px;}
+
+  .divider{height:1px; background:var(--line); margin:14px 0;}
+  table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+  th{text-align:left; color:var(--muted); font-weight:500; font-size:0.68rem; padding:6px 6px; border-bottom:1px solid var(--line);}
+  td{padding:7px 6px; border-bottom:1px solid var(--line); font-family:var(--mono);}
+  td.txt{font-family:'IBM Plex Sans',sans-serif;}
+
+  .btn{background:var(--sun); color:#1a1206; border:none; padding:9px 14px; border-radius:7px; font-weight:600; font-size:0.82rem; cursor:pointer;}
+  .btn.secondary{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .btn.small{padding:5px 9px; font-size:0.72rem;}
+  .btn.danger{background:transparent; border:1px solid var(--red); color:var(--red);}
+  .btn:disabled{opacity:0.5; cursor:not-allowed;}
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+
+  .note{font-size:0.76rem; color:var(--muted); margin-top:8px;}
+  .seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-top:6px;}
+  .seg button{flex:1; background:var(--panel-2); color:var(--muted); border:none; padding:8px 6px; font-size:0.78rem; cursor:pointer; border-right:1px solid var(--line);}
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--sun); color:#1a1206; font-weight:600;}
+
+  .radio-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:6px;}
+  .radio-row label{display:flex; align-items:center; gap:5px; font-size:0.8rem; color:var(--text); margin:0;}
+  .radio-row input{width:auto;}
+
+  .equipo-row{display:grid; grid-template-columns:1.6fr 0.6fr 0.8fr 0.7fr 0.7fr 0.9fr auto; gap:6px; align-items:center; margin-bottom:6px; font-size:0.78rem;}
+  .equipo-row input, .equipo-row select{padding:6px 6px; font-size:0.78rem;}
+  .equipo-head{display:grid; grid-template-columns:1.6fr 0.6fr 0.8fr 0.7fr 0.7fr 0.9fr auto; gap:6px; font-size:0.65rem; color:var(--muted); margin-bottom:4px;}
+  .eq-scroll{overflow-x:auto;}
+  .eq-min-w{min-width:640px;}
+
+  .icon-wrap{width:30px;height:30px;flex:none;}
+
+  #compassDial{width:220px;height:220px;margin:14px auto; position:relative;}
+  #compassNeedle{position:absolute; inset:0; transition:transform .15s linear;}
+  #levelTrack{height:36px; background:var(--panel-2); border-radius:20px; position:relative; border:1px solid var(--line); margin-top:12px;}
+  #levelBubble{position:absolute; top:3px; width:30px; height:30px; border-radius:50%; background:var(--red); transition:left .15s linear, background .2s;}
+
+  ::-webkit-scrollbar{height:6px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="icon-wrap">
+      <svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="20" r="9" fill="#ffb238"/><g stroke="#ffb238" stroke-width="2.5" stroke-linecap="round"><line x1="20" y1="2" x2="20" y2="7"/><line x1="20" y1="33" x2="20" y2="38"/><line x1="2" y1="20" x2="7" y2="20"/><line x1="33" y1="20" x2="38" y2="20"/><line x1="7" y1="7" x2="10.5" y2="10.5"/><line x1="29.5" y1="29.5" x2="33" y2="33"/><line x1="33" y1="7" x2="29.5" y2="10.5"/><line x1="10.5" y1="29.5" x2="7" y2="33"/></g></svg>
+    </div>
+    <div class="htxt">
+      <h1>REYSOLAR</h1>
+      <p>Motor de cálculo mixto para diseño e instalación fotovoltaica</p>
+      <div class="badge-row">
+        <span class="badge">Demanda por equipos</span>
+        <span class="badge">PVGIS + GPS</span>
+        <span class="badge">Voc/Vmp corregidos</span>
+        <span class="badge">Baterías</span>
+        <span class="badge">Caída de tensión</span>
+        <span class="badge">Brújula y nivel</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="demanda">1 · Demanda</button>
+    <button class="tab" data-tab="sol">2 · Sol y ubicación</button>
+    <button class="tab" data-tab="panelficha">3 · Panel</button>
+    <button class="tab" data-tab="dimension">4 · Nº de paneles</button>
+    <button class="tab" data-tab="inversor">5 · Inversor</button>
+    <button class="tab" data-tab="voltajes">6 · Voltajes / strings</button>
+    <button class="tab" data-tab="baterias">7 · Baterías</button>
+    <button class="tab" data-tab="distancia">8 · Distancia filas</button>
+    <button class="tab" data-tab="caida">9 · Caída de tensión</button>
+    <button class="tab" data-tab="brujula">10 · Brújula y nivel</button>
+    <button class="tab" data-tab="resumen">11 · Resumen</button>
+  </div>
+
+  <!-- 1 DEMANDA -->
+  <div class="panel active" id="p-demanda">
+    <div class="card">
+      <h3><span class="n">01</span> Forma de calcular la demanda</h3>
+      <div class="seg" id="segDemanda">
+        <button type="button" class="active" data-mode="mensual">Por consumo mensual (kWh)</button>
+        <button type="button" data-mode="equipos">Por equipos eléctricos</button>
+      </div>
+
+      <div id="bloqueMensual" style="margin-top:12px;">
+        <div class="row">
+          <div><label>Consumo mensual (kWh, según factura)</label><input type="number" id="consumoMes" value="850"></div>
+          <div><label>% del consumo a cubrir</label><input type="number" id="pctCobertura" value="100"></div>
+        </div>
+      </div>
+
+      <div id="bloqueEquipos" style="display:none; margin-top:12px;">
+        <div class="eq-scroll">
+          <div class="eq-min-w">
+            <div class="equipo-head">
+              <div>Equipo</div><div>Cant.</div><div>Potencia (W)</div><div>Horas/día</div><div>¿Motor?</div><div>Factor arranque</div><div></div>
+            </div>
+            <div id="equiposBody" class="eq-min-w"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn secondary small" id="btnAddEquipo">+ Añadir equipo</button>
+        </div>
+        <p class="note">El "factor de arranque" multiplica la potencia nominal en el instante del arranque (típico: motores/compresores 2.5–4x). Se usa solo para calcular el pico de potencia que debe soportar el inversor, no afecta el consumo en kWh.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">02</span> Margen de seguridad</h3>
+      <label>Factor de sobredimensionado de la demanda (%)</label>
+      <input type="number" id="margenSeguridad" value="15">
+      <p class="note">Se aplica sobre el consumo diario calculado, antes de dimensionar paneles y baterías. Cubre crecimiento futuro de consumo, días nublados y errores de estimación.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">✓</span> Resultado de demanda</h3>
+      <div class="grid-readout">
+        <div class="readout">
+          <div class="val" id="out-consumoDiaBase">–</div>
+          <div class="lbl">Consumo diario base (kWh/día)</div>
+        </div>
+        <div class="readout ok">
+          <div class="val" id="out-consumoDiaFinal">–</div>
+          <div class="lbl">Consumo diario + margen (kWh/día)</div>
+        </div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout">
+          <div class="val" id="out-potSimultanea">–</div>
+          <div class="lbl">Potencia simultánea nominal (W)</div>
+        </div>
+        <div class="readout warn">
+          <div class="val" id="out-potPico">–</div>
+          <div class="lbl">Potencia pico de arranque (W)</div>
+        </div>
+      </div>
+      <p class="note">Estos dos últimos valores solo aplican en modo "por equipos" y se usan en la pestaña de Inversor.</p>
+    </div>
+  </div>
+
+  <!-- 2 SOL Y UBICACION -->
+  <div class="panel" id="p-sol">
+    <div class="card">
+      <h3><span class="n">03</span> Ubicación</h3>
+      <div class="btn-row">
+        <button type="button" class="btn" id="btnGPS">📍 Usar GPS del teléfono</button>
+      </div>
+      <div id="gpsStatus" class="note"></div>
+      <div class="row" style="margin-top:10px;">
+        <div><label>Latitud (°, + Norte / − Sur)</label><input type="number" step="0.0001" id="lat" value="37.4"></div>
+        <div><label>Longitud (°, + Este / − Oeste)</label><input type="number" step="0.0001" id="lon" value="-5.99"></div>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn secondary" id="btnPVGIS">☁ Calcular HSP con PVGIS (mes más desfavorable)</button>
+      </div>
+      <div id="pvgisStatus" class="note"></div>
+      <div id="pvgisTable"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">04</span> Recurso solar e inclinación</h3>
+      <label>Horas Sol Pico — HSP a usar en el cálculo (kWh/m²/día)</label>
+      <input type="number" step="0.01" id="hsp" value="4.2">
+      <p class="note">Puedes escribirla a mano o dejar que PVGIS la calcule arriba. Se recomienda usar el mes más desfavorable para garantizar cobertura todo el año.</p>
+
+      <label>Prioridad de inclinación</label>
+      <div class="radio-row">
+        <label><input type="radio" name="modoInclinacion" value="anual" checked> Todo el año</label>
+        <label><input type="radio" name="modoInclinacion" value="invierno"> Invierno</label>
+        <label><input type="radio" name="modoInclinacion" value="verano"> Verano</label>
+      </div>
+
+      <div class="divider"></div>
+      <div class="grid-readout g3">
+        <div class="readout"><div class="val" id="out-tiltOpt">–</div><div class="lbl">Anual (≈ latitud)</div></div>
+        <div class="readout"><div class="val" id="out-tiltInv">–</div><div class="lbl">Invierno (lat+15°)</div></div>
+        <div class="readout"><div class="val" id="out-tiltVer">–</div><div class="lbl">Verano (lat−15°)</div></div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-tiltActivo">–</div><div class="lbl">Inclinación objetivo activa</div></div>
+        <div class="readout ok"><div class="val" id="out-azimut">–</div><div class="lbl">Azimut objetivo</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">05</span> Respaldo y pérdidas del sistema</h3>
+      <label>Días de respaldo deseados (para baterías)</label>
+      <input type="number" step="0.5" id="diasAutonomia" value="1">
+      <div class="row3" style="margin-top:10px;">
+        <div><label>Temp. y cableado (%)</label><input type="number" id="perdTemp" value="9"></div>
+        <div><label>Suciedad (%)</label><input type="number" id="perdSuciedad" value="2"></div>
+        <div><label>Inversor (%)</label><input type="number" id="perdInv" value="3"></div>
+      </div>
+      <label>Pérdida por sombras (%)</label>
+      <input type="number" id="perdidaSombras" value="3">
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-pr">–</div><div class="lbl">Performance Ratio (PR)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 PANEL -->
+  <div class="panel" id="p-panelficha">
+    <div class="card">
+      <h3><span class="n">06</span> Ficha técnica del panel <svg width="26" height="26" viewBox="0 0 26 26"><rect x="2" y="2" width="22" height="22" rx="2" fill="#1a2432" stroke="#ffb238" stroke-width="1.5"/><line x1="2" y1="9.3" x2="24" y2="9.3" stroke="#ffb238" stroke-width="1"/><line x1="2" y1="16.6" x2="24" y2="16.6" stroke="#ffb238" stroke-width="1"/><line x1="9.3" y1="2" x2="9.3" y2="24" stroke="#ffb238" stroke-width="1"/><line x1="16.6" y1="2" x2="16.6" y2="24" stroke="#ffb238" stroke-width="1"/></svg></h3>
+      <div class="row">
+        <div><label>Potencia pico (W)</label><input type="number" id="panelW" value="550"></div>
+        <div><label>Vmp (V)</label><input type="number" step="0.1" id="panelVmp" value="41.5"></div>
+      </div>
+      <div class="row">
+        <div><label>Voc (V)</label><input type="number" step="0.1" id="panelVoc" value="49.5"></div>
+        <div><label>Isc (A)</label><input type="number" step="0.1" id="panelIsc" value="14.0"></div>
+      </div>
+      <div class="row">
+        <div><label>Coef. temp. de Voc (%/°C)</label><input type="number" step="0.01" id="coefVoc" value="-0.27"></div>
+        <div><label>Coef. temp. de Vmp (%/°C)</label><input type="number" step="0.01" id="coefVmp" value="-0.29"></div>
+      </div>
+      <div class="row">
+        <div><label>Alto del panel (m, lado de la inclinación)</label><input type="number" step="0.01" id="panelAlto" value="2.28"></div>
+        <div><label>Ancho del panel (m)</label><input type="number" step="0.01" id="panelAncho" value="1.13"></div>
+      </div>
+      <label>Tecnología</label>
+      <select id="tecnologiaPanel">
+        <option value="mono">Monofacial</option>
+        <option value="bifacial">Bifacial</option>
+      </select>
+      <div id="bloqueBifacial" style="display:none;">
+        <label>Ganancia adicional estimada por bifacialidad (%)</label>
+        <input type="number" id="gananciaBifacial" value="10">
+        <div class="flag ok" style="margin-top:8px;">ℹ Este dato es solo informativo (depende del albedo del suelo y altura de montaje). No se usa en ningún cálculo de dimensionamiento — todos los cálculos usan la potencia nominal STC.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 DIMENSIONAMIENTO -->
+  <div class="panel" id="p-dimension">
+    <div class="card">
+      <h3><span class="n">07</span> Cálculo del número de paneles</h3>
+      <div class="grid-readout g3">
+        <div class="readout"><div class="val" id="out-kwpNecesarioW">–</div><div class="lbl">Potencia pico necesaria (W)</div></div>
+        <div class="readout"><div class="val" id="out-kwpNecesarioKw">–</div><div class="lbl">Potencia pico necesaria (kW)</div></div>
+        <div class="readout ok"><div class="val" id="out-numPanelesCalc">–</div><div class="lbl">Nº paneles (redondeo superior)</div></div>
+      </div>
+      <label style="margin-top:12px;"><input type="checkbox" id="redondearPar" style="width:auto; margin-right:6px;">Redondear al siguiente número PAR (instalación mixta serie/paralelo)</label>
+      <div class="divider"></div>
+      <div class="grid-readout">
+        <div class="readout ok"><div class="val" id="out-numPanelesFinal">–</div><div class="lbl">Nº de paneles final a instalar</div></div>
+        <div class="readout"><div class="val" id="out-kwpReal">–</div><div class="lbl">Potencia instalada real (kWp)</div></div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout"><div class="val" id="out-produccionDia">–</div><div class="lbl">Producción estimada (kWh/día)</div></div>
+      </div>
+      <p class="note">kWp = Consumo diario objetivo / (HSP × PR). Nº paneles = kWp×1000 / W panel, redondeado hacia arriba (y opcionalmente al par superior).</p>
+    </div>
+  </div>
+
+  <!-- 5 INVERSOR -->
+  <div class="panel" id="p-inversor">
+    <div class="card">
+      <h3><span class="n">08</span> Selección de inversor <svg width="26" height="26" viewBox="0 0 26 26"><rect x="3" y="2" width="20" height="22" rx="2" fill="#1a2432" stroke="#3fb8a3" stroke-width="1.5"/><circle cx="13" cy="9" r="3" fill="none" stroke="#3fb8a3" stroke-width="1.4"/><line x1="7" y1="17" x2="19" y2="17" stroke="#3fb8a3" stroke-width="1.4"/><line x1="7" y1="20" x2="15" y2="20" stroke="#3fb8a3" stroke-width="1.4"/></svg></h3>
+      <div class="row">
+        <div><label>Potencia inversor CA (kW)</label><input type="number" step="0.1" id="invKw" value="6"></div>
+        <div><label>Eficiencia del inversor (%)</label><input type="number" step="0.1" id="invEficiencia" value="97"></div>
+      </div>
+      <div class="row">
+        <div><label>Nº de entradas MPPT</label><input type="number" id="invMppt" value="2"></div>
+        <div><label>Potencia pico (surge) soportada (kW)</label><input type="number" step="0.1" id="invSurge" value="9"></div>
+      </div>
+      <div class="row">
+        <div><label>Ventana MPPT mín. (V)</label><input type="number" id="invVminMppt" value="90"></div>
+        <div><label>Ventana MPPT máx. (V)</label><input type="number" id="invVmaxMppt" value="560"></div>
+      </div>
+      <div class="row">
+        <div><label>Tensión máx. absoluta entrada (V)</label><input type="number" id="invVmax" value="600"></div>
+        <div><label>Corriente máx. por entrada (A)</label><input type="number" id="invImax" value="16"></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="grid-readout">
+        <div class="readout" id="ratio-readout"><div class="val" id="out-ratioDcAc">–</div><div class="lbl">Ratio de sobredimensionado DC/AC</div></div>
+      </div>
+      <div id="flag-ratio"></div>
+      <div id="flag-continua"></div>
+      <div id="flag-pico"></div>
+    </div>
+  </div>
+
+  <!-- 6 VOLTAJES / STRINGS -->
+  <div class="panel" id="p-voltajes">
+    <div class="card">
+      <h3><span class="n">09</span> Corrección de Voltajes</h3>
+      <div class="row">
+        <div><label>Temperatura mínima histórica (°C)</label><input type="number" id="tempMin" value="-5"></div>
+        <div><label>Temperatura máxima de célula (°C)</label><input type="number" id="tempMax" value="70"></div>
+      </div>
+      <p class="note">Voc se corrige con la temperatura mínima (peor caso: tensión más alta, riesgo de superar el límite del inversor). Vmp se corrige con la temperatura máxima de célula (peor caso: tensión más baja, riesgo de caer bajo la ventana MPPT).</p>
+      <div class="grid-readout" style="margin-top:8px;">
+        <div class="readout warn"><div class="val" id="out-vocFrio">–</div><div class="lbl">Voc corregido en frío (V/panel)</div></div>
+        <div class="readout warn"><div class="val" id="out-vmpCaliente">–</div><div class="lbl">Vmp corregido en caliente (V/panel)</div></div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-minSerie">–</div><div class="lbl">Mín. paneles en serie</div></div>
+        <div class="readout ok"><div class="val" id="out-maxSerie">–</div><div class="lbl">Máx. paneles en serie</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">10</span> Tipo de conexión</h3>
+      <div class="seg" id="segConexion">
+        <button type="button" data-con="serie">Serie</button>
+        <button type="button" class="active" data-con="mixto">Mixto</button>
+        <button type="button" data-con="paralelo">Paralelo</button>
+      </div>
+      <div id="stringResult" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- 7 BATERIAS -->
+  <div class="panel" id="p-baterias">
+    <div class="card">
+      <h3><span class="n">11</span> Banco de baterías <svg width="26" height="26" viewBox="0 0 26 26"><rect x="2" y="6" width="19" height="14" rx="2" fill="#1a2432" stroke="#5aa6ff" stroke-width="1.5"/><rect x="21" y="10" width="3" height="6" rx="1" fill="#5aa6ff"/><line x1="7" y1="13" x2="12" y2="13" stroke="#5aa6ff" stroke-width="1.6"/><line x1="14.5" y1="10.5" x2="14.5" y2="15.5" stroke="#5aa6ff" stroke-width="1.6"/><line x1="12.5" y1="13" x2="16.5" y2="13" stroke="#5aa6ff" stroke-width="1.6"/></svg></h3>
+      <div class="row">
+        <div><label>DoD máxima admisible (%)</label><input type="number" id="dod" value="80"></div>
+        <div><label>Tensión de banco deseada (V)</label><input type="number" id="bankVdeseado" value="48"></div>
+      </div>
+      <div class="row">
+        <div><label>Tensión de la batería unitaria (V)</label><input type="number" id="batUnidadV" value="12"></div>
+        <div><label>Capacidad de la batería unitaria (Ah)</label><input type="number" id="batUnidadAh" value="200"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="grid-readout">
+        <div class="readout"><div class="val" id="out-energiaNecesaria">–</div><div class="lbl">Energía útil necesaria (kWh)</div></div>
+        <div class="readout"><div class="val" id="out-capNecesariaAh">–</div><div class="lbl">Capacidad necesaria @ tensión de banco (Ah)</div></div>
+      </div>
+      <div class="grid-readout g3" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-seriesBat">–</div><div class="lbl">Baterías en serie</div></div>
+        <div class="readout ok"><div class="val" id="out-paraleloBat">–</div><div class="lbl">Ramas en paralelo</div></div>
+        <div class="readout ok"><div class="val" id="out-totalBaterias">–</div><div class="lbl">Total de baterías</div></div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-bancoKwh">–</div><div class="lbl">Capacidad real del banco (kWh)</div></div>
+      </div>
+      <div id="flag-baterias"></div>
+      <p class="note">Usa la eficiencia del inversor (pestaña 5) y los días de respaldo (pestaña 2) para el cálculo de energía útil. Fórmula: E = (Consumo diario × días) / (DoD × eficiencia).</p>
+    </div>
+  </div>
+
+  <!-- 8 DISTANCIA -->
+  <div class="panel" id="p-distancia">
+    <div class="card">
+      <h3><span class="n">12</span> Distancia mínima entre filas</h3>
+      <div class="row">
+        <div><label>Inclinación de instalación (°)</label><input type="number" id="inclinacionInstalacion" value="35"></div>
+        <button type="button" class="btn secondary small" id="btnUsarObjetivo" style="margin-top:20px; height:38px;">↺ Usar inclinación objetivo</button>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout"><div class="val" id="out-alturaSolarMin">–</div><div class="lbl">Altura solar mínima (solsticio invierno)</div></div>
+        <div class="readout"><div class="val" id="out-proyeccionH">–</div><div class="lbl">Proyección horizontal del panel (m)</div></div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout ok"><div class="val" id="out-distanciaLibre">–</div><div class="lbl">Distancia libre entre filas, d (m)</div></div>
+        <div class="readout ok"><div class="val" id="out-pasoTotal">–</div><div class="lbl">Paso total fila a fila (m)</div></div>
+      </div>
+      <div id="flag-distancia"></div>
+      <p class="note">Método IDAE (PCT-C-REV): altura solar mínima = 90° − |latitud| − 23,45° (solsticio de invierno). d = h/tan(altura solar mínima), con h = alto del panel × sen(inclinación). Garantiza ausencia de sombras ~4h en torno al mediodía solar del día más desfavorable del año.</p>
+    </div>
+  </div>
+
+  <!-- 9 CAIDA DE TENSION -->
+  <div class="panel" id="p-caida">
+    <div class="card">
+      <h3><span class="n">13</span> Caída de tensión en tramo DC (paneles → inversor)</h3>
+      <div class="row">
+        <div><label>Material del conductor</label><select id="dcMaterial"><option value="cu">Cobre</option><option value="al">Aluminio</option></select></div>
+        <div><label>Longitud del tramo, ida (m)</label><input type="number" id="dcLongitud" value="15"></div>
+      </div>
+      <div class="row">
+        <div><label>Corriente del tramo (A)</label><input type="number" step="0.1" id="dcCorriente" value="14"></div>
+        <div><label>Tensión del tramo (V)</label><input type="number" id="dcVoltaje" value="290"></div>
+      </div>
+      <label>Sección del cable</label>
+      <div class="row">
+        <select id="dcSeccionModo"><option value="mm2">mm²</option><option value="awg">AWG</option></select>
+        <input type="number" step="0.1" id="dcSeccionValor" value="6">
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout"><div class="val" id="out-dcCaidaV">–</div><div class="lbl">Caída de tensión (V)</div></div>
+        <div class="readout" id="dcPct-readout"><div class="val" id="out-dcCaidaPct">–</div><div class="lbl">Caída de tensión (%)</div></div>
+      </div>
+      <div id="flag-dc"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">14</span> Caída de tensión en tramo AC (inversor → cuadro/red)</h3>
+      <div class="row">
+        <div><label>Material del conductor</label><select id="acMaterial"><option value="cu">Cobre</option><option value="al">Aluminio</option></select></div>
+        <div><label>Longitud del tramo, ida (m)</label><input type="number" id="acLongitud" value="10"></div>
+      </div>
+      <div class="row">
+        <div><label>Corriente del tramo (A)</label><input type="number" step="0.1" id="acCorriente" value="26"></div>
+        <div><label>Tensión del tramo (V)</label><input type="number" id="acVoltaje" value="230"></div>
+      </div>
+      <div class="row">
+        <div><label>cos φ (factor de potencia)</label><input type="number" step="0.01" id="acCosPhi" value="1"></div>
+        <div><label>Sección</label>
+          <div class="row">
+            <select id="acSeccionModo"><option value="mm2">mm²</option><option value="awg">AWG</option></select>
+            <input type="number" step="0.1" id="acSeccionValor" value="6">
+          </div>
+        </div>
+      </div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout"><div class="val" id="out-acCaidaV">–</div><div class="lbl">Caída de tensión (V)</div></div>
+        <div class="readout" id="acPct-readout"><div class="val" id="out-acCaidaPct">–</div><div class="lbl">Caída de tensión (%)</div></div>
+      </div>
+      <div id="flag-ac"></div>
+      <p class="note">ΔV = 2·L·I·ρ·cosφ / S. ρ(Cu)=0,017241 Ω·mm²/m, ρ(Al)=0,0282 Ω·mm²/m. Límite recomendado: 3% en cada tramo.</p>
+    </div>
+  </div>
+
+  <!-- 10 BRUJULA -->
+  <div class="panel" id="p-brujula">
+    <div class="card">
+      <h3><span class="n">15</span> Brújula de orientación y nivel de inclinación</h3>
+      <p class="note">Objetivo calculado: azimut <b id="txt-azimutObjetivo">–</b>, inclinación <b id="txt-tiltObjetivo">–</b>. Requiere abrir esta página en el móvil, con HTTPS, y conceder permiso de sensores de movimiento.</p>
+      <div class="btn-row"><button type="button" class="btn" id="btnSensores">🧭 Activar sensores</button></div>
+      <div id="sensorStatus" class="note"></div>
+
+      <div id="compassDial">
+        <svg viewBox="0 0 200 200" width="220" height="220" style="position:absolute; inset:0;">
+          <circle cx="100" cy="100" r="95" fill="#1a2432" stroke="#25313f" stroke-width="2"/>
+          <text x="100" y="18" fill="#8fa0b3" font-size="12" text-anchor="middle">N</text>
+          <text x="182" y="104" fill="#8fa0b3" font-size="12" text-anchor="middle">E</text>
+          <text x="100" y="190" fill="#8fa0b3" font-size="12" text-anchor="middle">S</text>
+          <text x="18" y="104" fill="#8fa0b3" font-size="12" text-anchor="middle">O</text>
+          <g id="targetMarker"><line x1="100" y1="100" x2="100" y2="14" stroke="#3fb8a3" stroke-width="3" stroke-dasharray="4 3"/></g>
+        </svg>
+        <svg id="compassNeedle" viewBox="0 0 200 200" width="220" height="220">
+          <line x1="100" y1="100" x2="100" y2="24" stroke="#ffb238" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#ffb238"/>
+        </svg>
+      </div>
+      <p class="note" style="text-align:center;">Línea sólida ámbar = orientación actual del teléfono. Línea discontinua verde = azimut objetivo.</p>
+
+      <div class="divider"></div>
+      <label>Nivel de inclinación (objetivo marcado en verde ± 3°)</label>
+      <div id="levelTrack"><div id="levelBubble"></div></div>
+      <div class="grid-readout" style="margin-top:10px;">
+        <div class="readout"><div class="val" id="out-inclinacionActual">–</div><div class="lbl">Inclinación actual del teléfono</div></div>
+        <div class="readout"><div class="val" id="out-headingActual">–</div><div class="lbl">Rumbo actual (°, brújula)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 RESUMEN -->
+  <div class="panel" id="p-resumen">
+    <div class="card">
+      <h3><span class="n">✓</span> Ficha técnica resumen del proyecto</h3>
+      <table id="tablaResumen"></table>
+      <p class="note">Recalculado en vivo a partir de las 10 pestañas anteriores. Úsalo como base de la propuesta técnica y memoria de instalación.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+function num(id){ const el=document.getElementById(id); return el ? (parseFloat(el.value)||0) : 0; }
+function val(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+function checked(id){ const el=document.getElementById(id); return el ? el.checked : false; }
+function setText(id, v){ const el=document.getElementById(id); if(el) el.textContent = v; }
+function setHTML(id, v){ const el=document.getElementById(id); if(el) el.innerHTML = v; }
+function radioVal(name){ const el=document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; }
+function ceil(n){ return Math.ceil(n); }
+function toRad(d){ return d*Math.PI/180; }
+function toDeg(r){ return r*180/Math.PI; }
+const RHO = { cu:0.017241, al:0.0282 };
+function awgToMm2(awg){ const d = 0.127*Math.pow(92, (36-awg)/39); return Math.PI/4*d*d; }
+function seccionMm2(modo, valor){ return modo==='awg' ? awgToMm2(valor) : valor; }
+
+/* ---------- estado de equipos ---------- */
+let equipos = [
+  {nombre:'Nevera / refrigerador', cant:1, pot:150, horas:24, motor:true, factor:3},
+  {nombre:'Lavadora', cant:1, pot:500, horas:1, motor:true, factor:3},
+  {nombre:'Aire acondicionado', cant:1, pot:1200, horas:4, motor:true, factor:2.5},
+  {nombre:'Iluminación LED', cant:10, pot:10, horas:5, motor:false, factor:1},
+  {nombre:'Televisor', cant:2, pot:120, horas:4, motor:false, factor:1},
+  {nombre:'Bomba de agua', cant:1, pot:750, horas:1, motor:true, factor:3},
+];
+
+function renderEquipos(){
+  const body = document.getElementById('equiposBody');
+  body.innerHTML = equipos.map((e,i)=>`
+    <div class="equipo-row">
+      <input data-i="${i}" data-f="nombre" type="text" value="${e.nombre}">
+      <input data-i="${i}" data-f="cant" type="number" value="${e.cant}">
+      <input data-i="${i}" data-f="pot" type="number" value="${e.pot}">
+      <input data-i="${i}" data-f="horas" type="number" step="0.1" value="${e.horas}">
+      <input data-i="${i}" data-f="motor" type="checkbox" ${e.motor?'checked':''}>
+      <input data-i="${i}" data-f="factor" type="number" step="0.1" value="${e.factor}" ${e.motor?'':'disabled'}>
+      <button type="button" class="btn danger small" data-del="${i}">✕</button>
+    </div>`).join('');
+
+  body.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const i = +inp.dataset.i, f = inp.dataset.f;
+      if(f==='motor'){ equipos[i].motor = inp.checked; renderEquipos(); calcAll(); return; }
+      equipos[i][f] = (f==='nombre') ? inp.value : parseFloat(inp.value)||0;
+      calcAll();
+    });
+  });
+  body.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ equipos.splice(+btn.dataset.del,1); renderEquipos(); calcAll(); });
+  });
+}
+document.getElementById('btnAddEquipo').addEventListener('click', ()=>{
+  equipos.push({nombre:'Nuevo equipo', cant:1, pot:100, horas:1, motor:false, factor:1});
+  renderEquipos(); calcAll();
+});
+renderEquipos();
+
+/* ---------- segmentos (toggle buttons) ---------- */
+let modoDemanda = 'mensual';
+document.querySelectorAll('#segDemanda button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#segDemanda button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); modoDemanda = b.dataset.mode;
+    document.getElementById('bloqueMensual').style.display = modoDemanda==='mensual' ? '' : 'none';
+    document.getElementById('bloqueEquipos').style.display = modoDemanda==='equipos' ? '' : 'none';
+    calcAll();
+  });
+});
+
+let modoConexion = 'mixto';
+document.querySelectorAll('#segConexion button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#segConexion button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); modoConexion = b.dataset.con; calcAll();
+  });
+});
+
+document.getElementById('tecnologiaPanel').addEventListener('change', (e)=>{
+  document.getElementById('bloqueBifacial').style.display = e.target.value==='bifacial' ? '' : 'none';
+});
+
+/* ---------- GPS ---------- */
+document.getElementById('btnGPS').addEventListener('click', ()=>{
+  const status = document.getElementById('gpsStatus');
+  if(!navigator.geolocation){ status.textContent='Este navegador no soporta geolocalización.'; return; }
+  status.textContent = 'Obteniendo ubicación…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
+    document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
+    status.textContent = `Ubicación obtenida: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+    calcAll();
+  }, err=>{
+    status.textContent = 'No se pudo obtener el GPS (' + err.message + '). Introduce la latitud/longitud manualmente.';
+  }, {enableHighAccuracy:true, timeout:10000});
+});
+
+/* ---------- PVGIS ---------- */
+document.getElementById('btnPVGIS').addEventListener('click', async ()=>{
+  const status = document.getElementById('pvgisStatus');
+  const tableDiv = document.getElementById('pvgisTable');
+  const lat = num('lat'), lon = num('lon');
+  const modoIncl = radioVal('modoInclinacion');
+  const absLat = Math.abs(lat);
+  const tilt = modoIncl==='invierno' ? absLat+15 : modoIncl==='verano' ? Math.max(0,absLat-15) : absLat;
+  const aspect = lat>=0 ? 0 : 180;
+  if(!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180){ status.textContent='Introduce una latitud/longitud válidas antes de consultar PVGIS.'; return; }
+  status.textContent = `Consultando PVGIS para ${tilt.toFixed(0)}° y ${aspect===0?'Sur':'Norte'}…`;
+  tableDiv.innerHTML='';
+  try{
+    const params = new URLSearchParams({lat:String(lat), lon:String(lon), angle:String(tilt), aspect:String(aspect)});
+    const resp = await fetch('/api/pvgis?' + params.toString(), {headers:{'Accept':'application/json'}});
+    const payload = await resp.json();
+    if(!resp.ok) throw new Error(payload.error || ('HTTP '+resp.status));
+    const rows = payload.outputs?.monthly;
+    if(!Array.isArray(rows) || !rows.length) throw new Error('Sin datos mensuales para esta ubicación');
+    const dias = [31,28,31,30,31,30,31,31,30,31,30,31];
+    const hspMes = Array(12).fill(0);
+    rows.forEach(r=>{ const m=Number(r.month)-1, v=Number(r['H(i)_m']); if(m>=0&&m<12&&Number.isFinite(v)) hspMes[m]=v/dias[m]; });
+    const valid=hspMes.map((h,i)=>({h,i})).filter(x=>x.h>0);
+    if(valid.length<12) throw new Error('PVGIS no devolvió los 12 meses esperados');
+    const minItem=valid.reduce((a,b)=>b.h<a.h?b:a,valid[0]), minIdx=minItem.i;
+    const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    document.getElementById('hsp').value=hspMes[minIdx].toFixed(2);
+    status.textContent=`Mes más desfavorable: ${meses[minIdx]} → HSP = ${hspMes[minIdx].toFixed(2)} kWh/m²/día. PVGIS: inclinación ${tilt.toFixed(0)}°, ${aspect===0?'Sur':'Norte'}.`;
+    tableDiv.innerHTML='<table><tr>'+meses.map(m=>`<th>${m}</th>`).join('')+'</tr><tr>'+hspMes.map((h,i)=>`<td class="${i===minIdx?'txt':''}" style="${i===minIdx?'color:#ffb238;font-weight:700;':''}">${h.toFixed(2)}</td>`).join('')+'</tr></table>';
+    calcAll();
+  }catch(err){ status.innerHTML=`⚠ No se pudo consultar PVGIS automáticamente (${String(err.message).replace(/[<>]/g,'')}). Comprueba la conexión a Internet o introduce la HSP manualmente.`; }
+});
+
+/* ---------- sensores: brujula y nivel ---------- */
+let sensorObjetivoHeading=0, sensorObjetivoTilt=30;
+function handleOrientation(e){
+  let heading;
+  if(e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null){ heading = e.webkitCompassHeading; }
+  else if(e.alpha !== null){ heading = 360 - e.alpha; }
+  else { heading = null; }
+  const tilt = e.beta !== null ? e.beta : null;
+
+  if(heading!==null){
+    document.getElementById('compassNeedle').style.transform = `rotate(${heading}deg)`;
+    setText('out-headingActual', heading.toFixed(0)+'°');
+  }
+  if(tilt!==null){
+    setText('out-inclinacionActual', tilt.toFixed(0)+'°');
+    const track = document.getElementById('levelTrack');
+    const bubble = document.getElementById('levelBubble');
+    const w = track.clientWidth - 36;
+    const pct = Math.max(0, Math.min(1, tilt/90));
+    bubble.style.left = (3 + pct*w)+'px';
+    const diff = Math.abs(tilt - sensorObjetivoTilt);
+    bubble.style.background = diff<=3 ? 'var(--teal)' : 'var(--red)';
+  }
+}
+document.getElementById('btnSensores').addEventListener('click', ()=>{
+  const status = document.getElementById('sensorStatus');
+  if(location.protocol !== 'https:' && location.hostname !== 'localhost'){
+    status.textContent = '⚠ Los sensores de movimiento solo funcionan sobre HTTPS en el navegador móvil.';
+  }
+  if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+    DeviceOrientationEvent.requestPermission().then(state=>{
+      if(state==='granted'){
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        status.textContent = 'Sensores activos.';
+      } else { status.textContent = 'Permiso denegado por el usuario.'; }
+    }).catch(err=>{ status.textContent = 'No se pudo solicitar permiso: '+err.message; });
+  } else if('DeviceOrientationEvent' in window){
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    status.textContent = 'Sensores activos (Android / navegador compatible).';
+  } else {
+    status.textContent = 'Este navegador/dispositivo no soporta sensores de orientación.';
+  }
+});
+
+document.getElementById('btnUsarObjetivo').addEventListener('click', ()=>{
+  document.getElementById('inclinacionInstalacion').value = sensorObjetivoTilt.toFixed(1);
+  calcAll();
+});
+
+/* ---------- calculo principal ---------- */
+function calcAll(){
+  /* --- Demanda --- */
+  let consumoDiaBase=0, potSimultanea=0, potPico=0;
+  if(modoDemanda==='mensual'){
+    const consumoMes = num('consumoMes'), pct = num('pctCobertura')/100;
+    consumoDiaBase = (consumoMes/30)*pct;
+  } else {
+    let sumaConsumoWh=0, sumaRunningW=0, maxExtra=0;
+    equipos.forEach(e=>{
+      sumaConsumoWh += e.cant*e.pot*e.horas;
+      sumaRunningW += e.cant*e.pot;
+      if(e.motor){ const extra = e.cant*e.pot*(e.factor-1); if(extra>maxExtra) maxExtra=extra; }
+    });
+    consumoDiaBase = sumaConsumoWh/1000;
+    potSimultanea = sumaRunningW;
+    potPico = sumaRunningW + maxExtra;
+  }
+  const margen = num('margenSeguridad')/100;
+  const consumoDiaFinal = consumoDiaBase*(1+margen);
+  setText('out-consumoDiaBase', consumoDiaBase.toFixed(2));
+  setText('out-consumoDiaFinal', consumoDiaFinal.toFixed(2));
+  setText('out-potSimultanea', modoDemanda==='equipos' ? potSimultanea.toFixed(0) : '—');
+  setText('out-potPico', modoDemanda==='equipos' ? potPico.toFixed(0) : '—');
+
+  /* --- Sol / ubicacion --- */
+  const lat = num('lat');
+  const absLat = Math.abs(lat);
+  const tiltAnual = absLat, tiltInv = absLat+15, tiltVer = Math.max(0,absLat-15);
+  setText('out-tiltOpt', Math.round(tiltAnual)+'°');
+  setText('out-tiltInv', Math.round(tiltInv)+'°');
+  setText('out-tiltVer', Math.round(tiltVer)+'°');
+  const modoIncl = radioVal('modoInclinacion');
+  const tiltActivo = modoIncl==='invierno' ? tiltInv : modoIncl==='verano' ? tiltVer : tiltAnual;
+  setText('out-tiltActivo', Math.round(tiltActivo)+'°');
+  const azimutObjetivo = lat>=0 ? 0 : 180;
+  setText('out-azimut', azimutObjetivo===0 ? '0° (Sur)' : '180° (Norte)');
+  setText('txt-azimutObjetivo', (azimutObjetivo===0?'Sur (0°)':'Norte (180°)'));
+  setText('txt-tiltObjetivo', tiltActivo.toFixed(0)+'°');
+  sensorObjetivoTilt = tiltActivo;
+  sensorObjetivoHeading = lat>=0 ? 180 : 0; // rumbo de brujula hacia el objetivo
+  const targetMarker = document.getElementById('targetMarker');
+  if(targetMarker) targetMarker.setAttribute('transform', `rotate(${sensorObjetivoHeading} 100 100)`);
+
+  const hsp = num('hsp');
+  const perdTemp=num('perdTemp')/100, perdSuciedad=num('perdSuciedad')/100, perdInv=num('perdInv')/100, perdSombras=num('perdidaSombras')/100;
+  const pr = Math.max(0.3, 1-perdTemp-perdSuciedad-perdInv-perdSombras);
+  setText('out-pr', pr.toFixed(2));
+
+  /* --- Panel --- */
+  const panelW = num('panelW'), panelVmp=num('panelVmp'), panelVoc=num('panelVoc'), panelIsc=num('panelIsc');
+  const coefVoc=num('coefVoc'), coefVmp=num('coefVmp');
+  const panelAlto=num('panelAlto');
+
+  /* --- Dimensionamiento --- */
+  const kwpNecesarioKw = (hsp>0 && pr>0) ? consumoDiaFinal/(hsp*pr) : 0;
+  const kwpNecesarioW = kwpNecesarioKw*1000;
+  setText('out-kwpNecesarioW', kwpNecesarioW.toFixed(0));
+  setText('out-kwpNecesarioKw', kwpNecesarioKw.toFixed(2));
+
+  let numPanelesCalc = panelW>0 ? ceil((kwpNecesarioKw*1000)/panelW) : 0;
+  setText('out-numPanelesCalc', numPanelesCalc);
+  let numPanelesFinal = numPanelesCalc;
+  if(checked('redondearPar') && numPanelesFinal%2!==0) numPanelesFinal+=1;
+  setText('out-numPanelesFinal', numPanelesFinal);
+
+  const kwpReal = (numPanelesFinal*panelW)/1000;
+  setText('out-kwpReal', kwpReal.toFixed(2));
+  const produccionDia = kwpReal*hsp*pr;
+  setText('out-produccionDia', produccionDia.toFixed(1));
+
+  /* --- Inversor --- */
+  const invKw=num('invKw'), invMppt=Math.max(1,num('invMppt')), invVminMppt=num('invVminMppt'), invVmaxMppt=num('invVmaxMppt');
+  const invVmax=num('invVmax'), invImax=num('invImax'), invSurge=num('invSurge'), invEficiencia=num('invEficiencia');
+  const ratio = invKw>0 ? kwpReal/invKw : 0;
+  setText('out-ratioDcAc', ratio.toFixed(2));
+  const ratioReadout=document.getElementById('ratio-readout');
+  if(ratio>=1.05 && ratio<=1.35){
+    setHTML('flag-ratio', '<div class="flag ok"><b>✓ Ratio adecuado</b>Dentro del rango recomendado (1.05–1.35) para maximizar el uso del inversor.</div>');
+    ratioReadout.className='readout ok';
+  } else if(ratio>1.35){
+    setHTML('flag-ratio', '<div class="flag warn"><b>⚠ Sobredimensionado alto</b>Puede haber clipping (recorte de potencia) en horas centrales.<div class="fix">Solución: usar un inversor de mayor potencia, o reducir el nº de paneles si el consumo lo permite.</div></div>');
+    ratioReadout.className='readout warn';
+  } else if(ratio>0){
+    setHTML('flag-ratio', '<div class="flag warn"><b>⚠ Inversor sobrado</b>El campo FV es pequeño para este inversor: baja eficiencia en horas de poca radiación.<div class="fix">Solución: usar un inversor más pequeño o añadir más paneles hasta ratio ≥1.05.</div></div>');
+    ratioReadout.className='readout warn';
+  }
+  if(modoDemanda==='equipos' && potSimultanea>0){
+    if(invKw*1000 >= potSimultanea){
+      setHTML('flag-continua', '<div class="flag ok"><b>✓ Potencia continua suficiente</b>El inversor cubre la carga simultánea nominal ('+potSimultanea.toFixed(0)+' W).</div>');
+    } else {
+      setHTML('flag-continua', '<div class="flag warn"><b>⚠ Potencia continua insuficiente</b>La carga simultánea ('+potSimultanea.toFixed(0)+' W) supera la potencia del inversor ('+(invKw*1000).toFixed(0)+' W).<div class="fix">Solución: elegir un inversor de mayor potencia CA o reducir equipos simultáneos.</div></div>');
+    }
+    if(invSurge*1000 >= potPico){
+      setHTML('flag-pico', '<div class="flag ok"><b>✓ Soporta el pico de arranque</b>Pico requerido: '+potPico.toFixed(0)+' W, soportado: '+(invSurge*1000).toFixed(0)+' W.</div>');
+    } else {
+      setHTML('flag-pico', '<div class="flag warn"><b>⚠ Riesgo de disparo por arranque de motores</b>Pico requerido ('+potPico.toFixed(0)+' W) supera el surge del inversor ('+(invSurge*1000).toFixed(0)+' W).<div class="fix">Solución: inversor con mayor capacidad de pico, arrancadores suaves en motores grandes, o evitar arranques simultáneos.</div></div>');
+    }
+  } else {
+    setHTML('flag-continua',''); setHTML('flag-pico','');
+  }
+
+  /* --- Voltajes / strings --- */
+  const tempMin=num('tempMin'), tempMax=num('tempMax');
+  const vocFrio = panelVoc*(1+(coefVoc/100)*(tempMin-25));
+  const vmpCaliente = panelVmp*(1+(coefVmp/100)*(tempMax-25));
+  setText('out-vocFrio', vocFrio.toFixed(1));
+  setText('out-vmpCaliente', vmpCaliente.toFixed(1));
+  const minSerie = vmpCaliente>0 ? Math.max(1, ceil(invVminMppt/vmpCaliente)) : 1;
+  const maxSerieAbs = vocFrio>0 ? Math.floor(invVmax/vocFrio) : 0;
+  const maxSerieMppt = panelVmp>0 ? Math.floor(invVmaxMppt/panelVmp) : 0;
+  const maxSerie = Math.max(0, Math.min(maxSerieAbs, maxSerieMppt));
+  setText('out-minSerie', minSerie);
+  setText('out-maxSerie', maxSerie);
+
+  let stringHtml='';
+  if(numPanelesFinal<=0 || maxSerie<minSerie){
+    stringHtml = '<div class="flag warn">⚠ Revisa los datos: no hay una configuración serie válida con este panel/inversor.</div>';
+  } else if(modoConexion==='serie'){
+    if(numPanelesFinal<=maxSerie && numPanelesFinal>=minSerie){
+      const vStr=(numPanelesFinal*panelVmp).toFixed(0);
+      stringHtml = `<table><tr><th>Config.</th><th>Paneles</th><th>Vmp string</th><th>Corriente</th><th>Estado</th></tr>
+      <tr><td>1 string</td><td>${numPanelesFinal}</td><td>${vStr} V</td><td>${panelIsc.toFixed(1)} A</td><td class="txt">${panelIsc<=invImax?'✓ OK':'⚠ revisar corriente'}</td></tr></table>`;
+    } else {
+      stringHtml = `<div class="flag warn"><b>⚠ Serie pura no es viable</b>Con ${numPanelesFinal} paneles fuera del rango permitido (${minSerie}–${maxSerie}).<div class="fix">Solución: usa conexión "Mixto" o "Paralelo", o cambia el nº de paneles/inversor.</div></div>`;
+    }
+  } else if(modoConexion==='paralelo'){
+    const maxParaleloCorriente = panelIsc>0 ? Math.floor(invImax/panelIsc) : 0;
+    if(numPanelesFinal<=maxParaleloCorriente){
+      stringHtml = `<table><tr><th>Config.</th><th>Paneles</th><th>Vmp</th><th>Corriente total</th><th>Estado</th></tr>
+      <tr><td>${numPanelesFinal} en paralelo</td><td>${numPanelesFinal}</td><td>${panelVmp.toFixed(0)} V</td><td>${(numPanelesFinal*panelIsc).toFixed(1)} A</td><td class="txt">${numPanelesFinal*panelIsc<=invImax*invMppt?'✓ OK':'⚠ revisar'}</td></tr></table>`;
+    } else {
+      stringHtml = `<div class="flag warn"><b>⚠ Paralelo puro no es viable</b>${numPanelesFinal} paneles en paralelo exigirían ${(numPanelesFinal*panelIsc).toFixed(1)} A, por encima del máximo (${maxParaleloCorriente} paneles = ${invImax} A por entrada).<div class="fix">Solución: usar conexión "Mixto" con varias entradas MPPT, o añadir fusibles/combiner con mayor entrada de inversor.</div></div>`;
+    }
+  } else { // mixto: busca una distribución válida entre los MPPT disponibles
+    const n=numPanelesFinal, m=invMppt; let best=null;
+    function search(parts,remaining,idx){
+      if(idx===m){ if(remaining!==0) return; const used=parts.filter(x=>x>0); if(!used.length)return; const spread=Math.max(...used)-Math.min(...used); const dev=used.reduce((a,x)=>a+Math.abs(x-(n/m)),0); const score=spread*1000+dev; if(!best||score<best.score)best={parts:[...parts],score}; return; }
+      const slotsLeft=m-idx-1; const minHere=idx===m-1?remaining:minSerie; const maxHere=Math.min(maxSerie,remaining-slotsLeft*minSerie);
+      for(let x=minHere;x<=maxHere;x++){ if(x<minSerie||x>maxSerie)continue; search(parts.concat(x),remaining-x,idx+1); }
+    }
+    search([],n,0);
+    if(!best){ stringHtml=`<div class="flag warn"><b>⚠ No existe una distribución válida</b>No es posible repartir ${n} paneles entre ${m} MPPT respetando ${minSerie}–${maxSerie} paneles por string.<div class="fix">Solución: cambiar el número de paneles, el inversor o permitir más de un string por MPPT mediante un diseño con combiner/fusibles adecuado.</div></div>`; }
+    else { const rows=best.parts.map((x,i)=>{ const vmpHot=x*vmpCaliente,vmpSTC=x*panelVmp,voc=x*vocFrio; const ok=vmpHot>=invVminMppt&&vmpSTC<=invVmaxMppt&&voc<=invVmax&&panelIsc<=invImax; return `<tr><td>MPPT ${i+1}</td><td>${x} paneles</td><td>${vmpHot.toFixed(0)}–${vmpSTC.toFixed(0)} V</td><td>${voc.toFixed(0)} V</td><td>${panelIsc.toFixed(1)} A</td><td class="txt">${ok?'✓ OK':'⚠ revisar'}</td></tr>`; }); const allOk=best.parts.every(x=>x*vmpCaliente>=invVminMppt&&x*panelVmp<=invVmaxMppt&&x*vocFrio<=invVmax&&panelIsc<=invImax); stringHtml=`<table><tr><th>Entrada</th><th>Paneles</th><th>Vmp caliente–STC</th><th>Voc frío</th><th>Corriente</th><th>Estado</th></tr>${rows.join('')}</table>`+(allOk?'<div class="flag ok" style="margin-top:6px;">✓ Configuración válida: cada MPPT queda dentro de sus límites de tensión y corriente.</div>':'<div class="flag warn" style="margin-top:6px;">⚠ La distribución de paneles existe, pero alguna entrada supera un límite del inversor.</div>'); }
+  }
+  setHTML('stringResult', stringHtml);
+
+  /* --- Baterias --- */
+  const diasAut = num('diasAutonomia'), dod = num('dod')/100, bankV = num('bankVdeseado');
+  const batV = num('batUnidadV'), batAh = num('batUnidadAh');
+  const effInv = invEficiencia>0 ? invEficiencia/100 : 0.9;
+  const energiaWh = (dod>0 && effInv>0) ? (consumoDiaFinal*1000*diasAut)/(dod*effInv) : 0;
+  const energiaKwh = energiaWh/1000;
+  setText('out-energiaNecesaria', energiaKwh.toFixed(2));
+  const capAhBanco = bankV>0 ? energiaWh/bankV : 0;
+  setText('out-capNecesariaAh', capAhBanco.toFixed(0));
+  const seriesBat = batV>0 ? ceil(bankV/batV) : 0;
+  const paraleloBat = batAh>0 ? ceil(capAhBanco/batAh) : 0;
+  const totalBaterias = seriesBat*paraleloBat;
+  const bancoKwh = (seriesBat*batV*paraleloBat*batAh)/1000;
+  setText('out-seriesBat', seriesBat);
+  setText('out-paraleloBat', paraleloBat);
+  setText('out-totalBaterias', totalBaterias);
+  setText('out-bancoKwh', bancoKwh.toFixed(2));
+  const batCompatible=batV>0&&bankV>0&&Math.abs(bankV/batV-Math.round(bankV/batV))<1e-9;
+  if(!batCompatible&&batV>0&&bankV>0) setHTML('flag-baterias','<div class="flag warn"><b>⚠ Tensión de banco no compatible</b>La tensión deseada ('+bankV+' V) no es múltiplo exacto de la batería unitaria ('+batV+' V). La combinación se ha redondeado.<div class="fix">Solución: elegir una tensión de banco que sea múltiplo de la batería unitaria.</div></div>');
+  else setHTML('flag-baterias',batV>0&&bankV>0?'<div class="flag ok">✓ La tensión del banco es compatible con la batería unitaria.</div>':'');
+
+  /* --- Distancia entre filas --- */
+  const inclInst = num('inclinacionInstalacion');
+  const decl=23.45;
+  const alturaSolarMin = 90-Math.abs(lat)-decl;
+  setText('out-alturaSolarMin', alturaSolarMin.toFixed(1)+'°');
+  const h = panelAlto*Math.sin(toRad(inclInst));
+  const proyeccionH = panelAlto*Math.cos(toRad(inclInst));
+  setText('out-proyeccionH', proyeccionH.toFixed(2)+' m');
+  let dLibre=0, paso=0;
+  if(alturaSolarMin>1){
+    dLibre = h/Math.tan(toRad(alturaSolarMin));
+    paso = proyeccionH+dLibre;
+    setText('out-distanciaLibre', dLibre.toFixed(2)+' m');
+    setText('out-pasoTotal', paso.toFixed(2)+' m');
+    setHTML('flag-distancia','');
+  } else {
+    setText('out-distanciaLibre','—'); setText('out-pasoTotal','—');
+    setHTML('flag-distancia', '<div class="flag warn">⚠ Latitud extrema: la fórmula estándar no es fiable aquí (el sol apenas se eleva en invierno). Consulta un estudio de sombras específico.</div>');
+  }
+
+  /* --- Caida de tension --- */
+  function caida(prefix, matId, lenId, corrId, voltId, seccModoId, seccValId, cosPhi){
+    const rho = RHO[val(matId)];
+    const L=num(lenId), I=num(corrId), Vn=num(voltId);
+    const S = seccionMm2(val(seccModoId), num(seccValId));
+    const dV = S>0 ? (2*L*I*rho*cosPhi)/S : 0;
+    const pct = Vn>0 ? (dV/Vn)*100 : 0;
+    setText('out-'+prefix+'CaidaV', dV.toFixed(2)+' V');
+    setText('out-'+prefix+'CaidaPct', pct.toFixed(2)+'%');
+    const readout = document.getElementById(prefix+'Pct-readout');
+    if(pct<=3){
+      readout.className='readout ok';
+      setHTML('flag-'+prefix, '<div class="flag ok">✓ Caída dentro del límite del 3%.</div>');
+    } else {
+      readout.className='readout warn';
+      setHTML('flag-'+prefix, `<div class="flag warn"><b>⚠ Caída excesiva (${pct.toFixed(1)}%)</b><div class="fix">Solución: aumentar la sección del cable o acortar la distancia del tramo.</div></div>`);
+    }
+  }
+  caida('dc','dcMaterial','dcLongitud','dcCorriente','dcVoltaje','dcSeccionModo','dcSeccionValor', 1);
+  caida('ac','acMaterial','acLongitud','acCorriente','acVoltaje','acSeccionModo','acSeccionValor', num('acCosPhi'));
+
+  /* --- Resumen --- */
+  const filas = [
+    ['Modo de demanda', modoDemanda==='mensual'?'Consumo mensual':'Por equipos eléctricos'],
+    ['Consumo diario (con margen)', consumoDiaFinal.toFixed(2)+' kWh/día'],
+    ['HSP usada', hsp+' h — inclinación objetivo '+tiltActivo.toFixed(0)+'°, azimut '+(azimutObjetivo===0?'Sur':'Norte')],
+    ['Performance Ratio', pr.toFixed(2)],
+    ['Potencia instalada', kwpReal.toFixed(2)+' kWp ('+numPanelesFinal+' × '+panelW+'W)'],
+    ['Producción estimada', produccionDia.toFixed(1)+' kWh/día'],
+    ['Inversor', invKw+' kW · ratio DC/AC '+ratio.toFixed(2)+' · eficiencia '+invEficiencia+'%'],
+    ['Voc frío / Vmp caliente', vocFrio.toFixed(1)+' V / '+vmpCaliente.toFixed(1)+' V'],
+    ['Serie permitida', minSerie+' – '+maxSerie+' paneles ('+modoConexion+')'],
+    ['Banco de baterías', totalBaterias+' uds ('+seriesBat+'S'+paraleloBat+'P) — '+bancoKwh.toFixed(2)+' kWh'],
+    ['Distancia entre filas', dLibre? dLibre.toFixed(2)+' m libres — paso '+paso.toFixed(2)+' m' : '—'],
+    ['Caída DC / AC', document.getElementById('out-dcCaidaPct').textContent+' / '+document.getElementById('out-acCaidaPct').textContent],
+  ];
+  setHTML('tablaResumen', '<tr><th>Parámetro</th><th>Valor</th></tr>'+filas.map(f=>`<tr><td class="txt">${f[0]}</td><td class="txt">${f[1]}</td></tr>`).join(''));
+}
+
+document.addEventListener('input', calcAll);
+document.addEventListener('change', calcAll);
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('p-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+calcAll();
+</script>
+</body>
+</html>
