@@ -2,7 +2,7 @@
   "name": "REYSOLAR · Dimensionamiento e instalación fotovoltaica",
   "short_name": "REYSOLAR",
   "lang": "es",
-  "start_url": "./reysolar.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
